@@ -1,66 +1,38 @@
-// Basic Lib Import
-const express =require('express');
-const router =require('./src/routes/api');
-const app= new express();
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import router from "./src/routes/api.js";
 
-// Security Middleware Lib Import
-const cors =require('cors');
+const app = express();
 
+dotenv.config();
 
-// Database Lib Import
-const mongoose =require('mongoose');
+const corsOptions = {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200
+};
 
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
-// Security Middleware Implement
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://swift-mail-5a7d7.web.app'
-  ],
-  credentials: true,
-}));
+app.use(express.json());
 
-app.use(express.json())
-
-
-require('dotenv').config()
-
-// Mongo DB Database Connection
-let URI=`mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASS}@cluster0.wjgws1x.mongodb.net/temp-mail`;
-
-mongoose.connect(URI)
-.then(() => {
-    console.log('Mongoose connected successfully');
+mongoose
+  .connect(process.env.DB_URL)
+  .then(() => {
+    console.log("Mongoose connected successfully");
   })
   .catch((error) => {
-    console.error('Error connecting to MongoDB:', error.toString());
+    console.error("Error connecting to MongoDB:", error.toString());
   });
 
+app.use("/", router);
 
-// Routing Implement
-app.use("/",router)
+app.use("*", (req, res) => {
+  res.status(404).json({ status: "fail", data: "Not Found" });
+});
 
-
-// Undefined Route Implement
-app.use("*",(req,res)=>{
-    res.status(404).json({status:"fail",data:"Not Found"})
-})
-
-
-module.exports=app;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default app;
